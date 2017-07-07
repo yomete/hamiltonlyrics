@@ -3,6 +3,7 @@ const path = require('path');
 const bodyParser = require("body-parser");
 const app = express();
 const Pusher = require('pusher');
+const crypto = require("crypto");
 
 const pusher = new Pusher({
     appId: '351311',
@@ -31,18 +32,6 @@ app.use( (req, res, next) => {
 
 app.set('port', (process.env.PORT || 5000));
 
-function generateUUID () {
-  var d = new Date().getTime();
-  var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    var r = (d + Math.random() * 16) % 16 | 0;
-    d = Math.floor(d / 16);
-    return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-  });
-  return uuid;
-}
-
-let user_id = generateUUID()
-
 app.get('/', (req,res) => {
     res.send('Welcome')
 })
@@ -51,7 +40,7 @@ app.post('/pusher/auth', (req, res) => {
     let socketId = req.body.socket_id;
     let channel = req.body.channel_name;
     let presenceData = {
-      user_id: user_id
+      user_id: crypto.randomBytes(16).toString("hex")
     };
     let auth = pusher.authenticate(socketId, channel, presenceData);
     res.send(auth);
