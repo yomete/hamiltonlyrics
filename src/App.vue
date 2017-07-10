@@ -10,7 +10,7 @@ export default {
 }
 </script>
 
-<style>
+<style>a
   html {
     background: #7fd4d3;
   }

@@ -4,22 +4,22 @@
       <div class="inner">
         <h1>Do you know your Hamilton Lyrics?</h1>
         <p>Test your knowledge of Hamilton: An American Musical by guessing who sang what lyric.</p>
+        <p>Invite a second player by sending them this link {{url}}.</p>
       </div>
     </div>
     <div class="play" v-if="secondplayer">
       <div>
         <div class="container hamilton--header--text">
           <h1>Do you know your Hamilton Lyrics?</h1>
-          <p>Time left - {{timeLeft}}</p>
 
           <div class="columns hamilton--inner">
             <div class="column is-half left">
               <p class="title">User 1</p>
-              <p class="subtitle">Total Score: {{totalscore}}</p>
+              <p class="subtitle">Total Score: {{playerdata.one.score}}</p>
             </div>
             <div v-if="secondplayer" class="column is-half right">
               <p class="title">User 2</p>
-              <p class="subtitle">Total Score: {{totalscore}}</p>
+              <p class="subtitle">Total Score: {{playerdata.two.score}}</p>
             </div>
           </div>
 
@@ -145,31 +145,36 @@
       answer: 'Burr'
     }
   ]
-
   export default {
     name: 'home',
     data () {
       return {
         presenceid: null,
-        timeLeft: 15,
         hasAnswered: false,
-        totalscore: 0,
         question: null,
         options: null,
         correctanswer: null,
         count: null,
-        questionindex: 0,
         players: 1,
         secondplayer: false,
         playerdata: {
-          id: null,
-          score: null
-        }
+          one: {
+            id: null,
+            score: 0,
+            userid: null
+          },
+          two: {
+            id: null,
+            score: 0,
+            userid: null
+          }
+        },
+        userid: null,
+        url: null
       }
     },
     created () {
       this.fetchData()
-      this.timer()
     },
     methods: {
       fetchData () {
@@ -178,25 +183,37 @@
           var separator = (window.location.href.indexOf('?') === -1) ? '?' : '&'
           window.location.href = window.location.href + separator + this.presenceid
         }
+        this.url = window.location.href
         this.getNewQuestion()
         let channel = ChannelDetails.subscribeToPusher()
         channel.bind('pusher:member_added', members => {
           this.players += 1
+          this.secondplayer = true
         })
         channel.bind('pusher:subscription_succeeded', members => {
-          if (members.count > 1) {
-            console.log('more than 1')
+          if (members.count === 1 && !this.playerdata.one.id) {
+            this.playerdata.one.id = members.myID
+            this.playerdata.one.userid = 1
+            this.userid = 1
+          } else if (members.count === 2) {
             this.secondplayer = true
-            this.playerdata.id = members.myID
+            this.playerdata.two.id = members.myID
+            this.playerdata.two.userid = 2
+            this.userid = 2
           }
-          console.log(members)
         })
         channel.bind('pusher:member_removed', member => {
           this.players -= 1
+          if (member.count === 1) {
+            this.secondplayer = false
+          }
         })
         channel.bind('client-send', (data) => {
-          console.log(data)
-          this.totalscore = data.score
+          if (this.userid === 1) {
+            this.playerdata.two.score = data.data.two.score
+          } else if (this.userid === 2) {
+            this.playerdata.one.score = data.data.one.score
+          }
         })
       },
       getUniqueId () {
@@ -216,27 +233,39 @@
         let channel = ChannelDetails.subscribeToPusher()
         this.hasAnswered = true
         if (item.name === this.correctanswer) {
-          this.totalscore += 10
+          if (this.userid === 1) {
+            this.playerdata.one.score += 10
+          } else if (this.userid === 2) {
+            this.playerdata.two.score += 10
+          }
         } else {
-          if (this.totalscore < 10) {
-            this.totalscore = 0
+          if (this.playerdata.one.score < 10) {
+            if (this.userid === 1) {
+              this.playerdata.one.score = 0
+            } else if (this.userid === 2) {
+              this.playerdata.two.score = 0
+            }
+          } else if (this.playerdata.two.score < 10) {
+            if (this.userid === 1) {
+              this.playerdata.one.score = 0
+            } else if (this.userid === 2) {
+              this.playerdata.two.score = 0
+            }
           } else {
-            this.totalscore -= 10
+            if (this.userid === 1) {
+              this.playerdata.one.score -= 10
+            } else if (this.userid === 2) {
+              this.playerdata.two.score -= 10
+            }
           }
         }
-        channel.trigger('client-send', {score: this.totalscore})
+        channel.trigger('client-send', {data: this.playerdata})
         this.count = 3
         let countdown = setInterval(() => {
           this.count -= 1
           if (this.count === 0) {
-            if (this.questionindex === 10) {
-              console.log('game over')
-              this.$router.push('/')
-            } else {
-              clearInterval(countdown)
-              this.getNewQuestion()
-              this.timeLeft = 15
-            }
+            clearInterval(countdown)
+            this.getNewQuestion()
           }
         }, 1000)
       },
@@ -273,16 +302,6 @@
         this.options = question.options
         this.correctanswer = question.answer
         this.hasAnswered = false
-        this.questionindex += 1
-      },
-      timer () {
-        setInterval(() => {
-          this.timeLeft -= 1
-          if (this.timeLeft === 0) {
-            this.getNewQuestion()
-            this.timeLeft = 10
-          }
-        }, 1000)
       }
     }
 }

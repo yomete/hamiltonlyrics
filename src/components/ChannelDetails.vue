@@ -1,9 +1,9 @@
 <script>
   import Pusher from 'pusher-js'
-  const pusher = new Pusher('26b7d8fa6aa64488853b', {
-    cluster: 'eu',
+  const pusher = new Pusher('APP_KEY', {
+    cluster: 'YOUR_CLUSTER',
     encrypted: true,
-    authEndpoint: 'http://localhost:5000/pusher/auth'
+    authEndpoint: 'ENDPOINT_URL'
   })
 
   export default ({
