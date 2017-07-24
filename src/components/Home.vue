@@ -239,22 +239,22 @@
             this.playerdata.two.score += 10
           }
         } else {
-          if (this.playerdata.one.score < 10) {
+          if (this.playerdata.one.score < 10 && this.playerdata.two.score === 0) {
             if (this.userid === 1) {
               this.playerdata.one.score = 0
             } else if (this.userid === 2) {
               this.playerdata.two.score = 0
             }
-          } else if (this.playerdata.two.score < 10) {
+          } else if (this.playerdata.two.score < 10 && this.playerdata.one.score === 0) {
             if (this.userid === 1) {
               this.playerdata.one.score = 0
             } else if (this.userid === 2) {
               this.playerdata.two.score = 0
             }
           } else {
-            if (this.userid === 1) {
+            if (this.userid === 1 && this.playerdata.one.score > 0) {
               this.playerdata.one.score -= 10
-            } else if (this.userid === 2) {
+            } else if (this.userid === 2 && this.playerdata.two.score > 0) {
               this.playerdata.two.score -= 10
             }
           }
