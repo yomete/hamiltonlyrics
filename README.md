@@ -1,6 +1,8 @@
 # hamiltonlyrics
 A realtime static page hosted on Firebase Hosting accompanying the tutorial on the Pusher blog.
 
+[View tutorial](https://pusher.com/tutorials/game-vuejs)
+
 ## How to run this app
 
 1. Clone the repo - `https://github.com/yomete/hamiltonlyrics`
